@@ -3,6 +3,8 @@
     Given a template in PNG and library files in tiff, detect the template.
 
 """
+
+from __future__ import print_function
     
 __author__           = "Dilawar Singh"
 __copyright__        = "Copyright 2017-, Dilawar Singh"
