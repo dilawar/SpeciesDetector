@@ -3,6 +3,7 @@
     Given a template in PNG and library files in tiff, detect the template.
 
 """
+from __future__ import print_function
     
 __author__           = "Dilawar Singh"
 __copyright__        = "Copyright 2017-, Dilawar Singh"
@@ -70,7 +71,7 @@ def detectTemplate( template, library):
             ## print( pts.shape )
             ## dst = cv2.perspectiveTransform(pts,M)
             ## f = cv2.polylines(f,[np.int32(dst)],True,255,3, cv2.LINE_AA)
-            img3 = cv2.drawMatchesKnn(template, kpTemp, f, kp, good, flags=2)
+            img3 = cv2.drawMatches(template, kpTemp, f, kp, good )
             show_frame( img3, True )
         else:
             print( '.', end='' )
