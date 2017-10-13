@@ -1,4 +1,4 @@
-TEMPLATE := ~/Work/DATA/SWATI_SPECIES_IN_DIRT/templates/species2.png
+TEMPLATE := ~/Work/DATA/SWATI_SPECIES_IN_DIRT/templates/species1.png
 LIBRARY := ~/Work/DATA/SWATI_SPECIES_IN_DIRT/db
 
 all : test 

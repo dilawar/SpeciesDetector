@@ -20,7 +20,7 @@ import cv2
 import numpy as np
 
 FLANN_INDEX_KDTREE = 0
-MIN_MATCH_COUNT = 10
+MIN_MATCH_COUNT = 20
 
 resdir = "_result"
 if not os.path.isdir( resdir ):
@@ -52,8 +52,8 @@ def detectTemplate( templ_path, library):
     if not os.path.isdir( templdir ):
         os.makedirs( templdir )
 
-    #sift = cv2.xfeatures2d.SIFT_create( )
-    sift = cv2.xfeatures2d.SURF_create( )
+    sift = cv2.xfeatures2d.SIFT_create( sigma = 1.2, nOctaveLayers = 5 )
+    #sift = cv2.xfeatures2d.SURF_create( )
     kpTemp, desTemp = sift.detectAndCompute( template, None )
 
     print( 'Template is loaded ' )
