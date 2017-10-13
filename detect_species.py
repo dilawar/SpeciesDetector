@@ -20,7 +20,7 @@ import cv2
 import numpy as np
 
 FLANN_INDEX_KDTREE = 0
-MIN_MATCH_COUNT = 13
+MIN_MATCH_COUNT = 10
 
 resdir = "_result"
 if not os.path.isdir( resdir ):
@@ -52,7 +52,8 @@ def detectTemplate( templ_path, library):
     if not os.path.isdir( templdir ):
         os.makedirs( templdir )
 
-    sift = cv2.xfeatures2d.SIFT_create( )
+    #sift = cv2.xfeatures2d.SIFT_create( )
+    sift = cv2.xfeatures2d.SURF_create( )
     kpTemp, desTemp = sift.detectAndCompute( template, None )
 
     print( 'Template is loaded ' )
@@ -68,22 +69,25 @@ def detectTemplate( templ_path, library):
     print( 'Total frames in library %d' % len( frames ) )
     for i, f in enumerate( frames ):
         kp, des = sift.detectAndCompute( f, None )
-        index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
-        search_params = dict(checks = 50)
-        flann = cv2.FlannBasedMatcher(index_params, search_params)
-        matches = flann.knnMatch(desTemp, des, k=2)
+        # index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
+        # search_params = dict(checks = 50)
+        # flann = cv2.FlannBasedMatcher(index_params, search_params)
+        bf = cv2.BFMatcher( )
+        matches = bf.knnMatch(desTemp, des, k=2)
 
         # store all the good matches as per Lowe's ratio test.
         good = []
         for m,n in matches:
-            if m.distance < 0.7*n.distance:
+            if m.distance < 0.70 * n.distance:
                 good.append(m)
 
         if len(good) > MIN_MATCH_COUNT:
             print( 'x', end='')
             sys.stdout.flush( )
             framePath = os.path.join( templdir, 'frame_%04d.png' % i )
-            cv2.imwrite( framePath, f )
+            newF = np.zeros_like( f )
+            newF = cv2.drawMatches( template, kpTemp, f, kp, good, newF )
+            cv2.imwrite( framePath, newF )
         else:
             print( '.', end='' )
             sys.stdout.flush( )
