@@ -20,7 +20,11 @@ import cv2
 import numpy as np
 
 FLANN_INDEX_KDTREE = 0
-MIN_MATCH_COUNT = 20
+MIN_MATCH_COUNT = 13
+
+resdir = "_result"
+if not os.path.isdir( resdir ):
+    os.makedirs( resdir )
 
 def show_frame( frame, block = False ):
     cv2.imshow( 'Frame', frame )
@@ -29,13 +33,30 @@ def show_frame( frame, block = False ):
     else:
         cv2.waitKey( -1 )
 
-def detectTemplate( template, library):
-    template = cv2.imread( template, 0 )
+def find_all_files( library ):
+    tiffs = [ ]
+    for d, sd, fs in os.walk( library ):
+        for f in fs:
+            ext = f.split( '.' )[-1]
+            if ext in [ 'tiff', 'TIFF', 'tif', 'TIF' ]:
+                tiffs.append( os.path.join( d, f ) )
+    print( 'Found %d tiff files in library' % len( tiffs ) )
+    return tiffs
+
+
+def detectTemplate( templ_path, library):
+    template = cv2.imread( templ_path, 0 )
+    # Create template directory.
+    tempName = os.path.basename( templ_path )
+    templdir = os.path.join( resdir, tempName )
+    if not os.path.isdir( templdir ):
+        os.makedirs( templdir )
+
     sift = cv2.xfeatures2d.SIFT_create( )
     kpTemp, desTemp = sift.detectAndCompute( template, None )
 
     print( 'Template is loaded ' )
-    alltifs = glob.glob( os.path.join( library, '*.tif' ) )
+    alltifs = find_all_files( library ) 
 
     frames = [ ]
     for f in alltifs:
@@ -59,20 +80,10 @@ def detectTemplate( template, library):
                 good.append(m)
 
         if len(good) > MIN_MATCH_COUNT:
-            print( 'Found template. Good points %d' % len(good) )
-            ## src_pts = np.float32([ kpTemp[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
-            ## dst_pts = np.float32([ kp[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
-
-            ## M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
-            ## matchesMask = mask.ravel().tolist()
-            ## h,w = template.shape
-            ## pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
-
-            ## print( pts.shape )
-            ## dst = cv2.perspectiveTransform(pts,M)
-            ## f = cv2.polylines(f,[np.int32(dst)],True,255,3, cv2.LINE_AA)
-            img3 = cv2.drawMatches(template, kpTemp, f, kp, good )
-            show_frame( img3, True )
+            print( 'x', end='')
+            sys.stdout.flush( )
+            framePath = os.path.join( templdir, 'frame_%04d.png' % i )
+            cv2.imwrite( framePath, f )
         else:
             print( '.', end='' )
             sys.stdout.flush( )
