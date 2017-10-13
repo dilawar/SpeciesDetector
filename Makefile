@@ -1,5 +1,5 @@
 TEMPLATE := ~/Work/DATA/SWATI_SPECIES_IN_DIRT/templates/species1.png
-LIBRARY := ~/Work/DATA/SWATI_SPECIES_IN_DIRT/db
+LIBRARY := ~/Work/DATA/SWATI_SPECIES_IN_DIRT/1
 
 all : test 
 	echo "Test is done"

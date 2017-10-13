@@ -52,7 +52,7 @@ def detectTemplate( templ_path, library):
     if not os.path.isdir( templdir ):
         os.makedirs( templdir )
 
-    sift = cv2.xfeatures2d.SIFT_create( )
+    sift = cv2.SIFT( )
     kpTemp, desTemp = sift.detectAndCompute( template, None )
 
     print( 'Template is loaded ' )
@@ -80,6 +80,7 @@ def detectTemplate( templ_path, library):
                 good.append(m)
 
         if len(good) > MIN_MATCH_COUNT:
+            # draw matches.
             print( 'x', end='')
             sys.stdout.flush( )
             framePath = os.path.join( templdir, 'frame_%04d.png' % i )
