@@ -20,9 +20,14 @@ import cv2
 import numpy as np
 
 FLANN_INDEX_KDTREE = 0
-MIN_MATCH_COUNT = 20
+MIN_MATCH_COUNT = 10
 
+kpTemp_, desTemp_ = None, None
+debug_ = False
+templdir = "."
 resdir = "_result"
+current_f_index_ = 0
+
 if not os.path.isdir( resdir ):
     os.makedirs( resdir )
 
@@ -45,7 +50,12 @@ def find_all_files( library ):
 
 
 def detectTemplate( templ_path, library):
+    global kpTemp_, desTemp_ 
+    global templdir
+    global current_f_index_ 
+
     template = cv2.imread( templ_path, 0 )
+
     # Create template directory.
     tempName = os.path.basename( templ_path )
     templdir = os.path.join( resdir, tempName )
@@ -54,43 +64,49 @@ def detectTemplate( templ_path, library):
 
     sift = cv2.xfeatures2d.SIFT_create( sigma = 1.2, nOctaveLayers = 5 )
     #sift = cv2.xfeatures2d.SURF_create( )
-    kpTemp, desTemp = sift.detectAndCompute( template, None )
+
+    kpTemp_, desTemp_ = sift.detectAndCompute( template, None )
+    assert desTemp_ is not None
 
     print( 'Template is loaded ' )
     alltifs = find_all_files( library ) 
 
-    frames = [ ]
     for f in alltifs:
+        current_f_index_ += 1
         fh = TIFF.open( f, mode="r")
         for frame in fh.iter_images( ):
-            frames.append( frame )
+            # Make frame b&w
+            frame = cv2.cvtColor( frame, cv2.COLOR_RGB2GRAY )
+            searchForTemplate( sift, template, frame )
         fh.close( )
 
-    print( 'Total frames in library %d' % len( frames ) )
-    for i, f in enumerate( frames ):
-        kp, des = sift.detectAndCompute( f, None )
-        # index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
-        # search_params = dict(checks = 50)
-        # flann = cv2.FlannBasedMatcher(index_params, search_params)
-        bf = cv2.BFMatcher( )
-        matches = bf.knnMatch(desTemp, des, k=2)
+def searchForTemplate( sift, template, f ):
+    global kpTemp_, desTemp_
+    global templdir
+    global current_f_index_
 
-        # store all the good matches as per Lowe's ratio test.
-        good = []
-        for m,n in matches:
-            if m.distance < 0.70 * n.distance:
-                good.append(m)
+    f = cv2.bilateralFilter( f, 13, 5, 7 )
+    kp, des = sift.detectAndCompute( f, None )
+    bf = cv2.BFMatcher( )
+    matches = bf.knnMatch(desTemp_, des, k=2)
 
-        if len(good) > MIN_MATCH_COUNT:
-            print( 'x', end='')
-            sys.stdout.flush( )
-            framePath = os.path.join( templdir, 'frame_%04d.png' % i )
-            newF = np.zeros_like( f )
-            newF = cv2.drawMatches( template, kpTemp, f, kp, good, newF )
-            cv2.imwrite( framePath, newF )
-        else:
-            print( '.', end='' )
-            sys.stdout.flush( )
+    # store all the good matches as per Lowe's ratio test.
+    good = []
+    for m,n in matches:
+        if m.distance < 0.75 * n.distance:
+            good.append(m)
+
+    if len(good) > MIN_MATCH_COUNT:
+        print( 'x', end='')
+        sys.stdout.flush( )
+        framePath = os.path.join( templdir, 'frame_%04d.png' % current_f_index_ )
+        newF = np.zeros_like( f )
+        newF = cv2.drawMatches( template, kpTemp_, f, kp, good, newF )
+        cv2.imwrite( framePath, newF )
+    else:
+        print( '.', end='' )
+        sys.stdout.flush( )
+
 
 def main( ):
     templateFile = sys.argv[1]
